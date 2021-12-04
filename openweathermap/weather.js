@@ -18,7 +18,7 @@ module.exports = function(RED) {
     "use strict";
     var request = require("request");
 
-    function assignmentFunction(node, msg, lat, lon, city, country, language, callback) {
+    function assignmentFunction(node, msg, lat, lon, city, country, language, units, callback) {
         if (country && city) {
             node.country = country;
             node.city = city;
@@ -38,6 +38,7 @@ module.exports = function(RED) {
             }
         }
         node.language = language || "en";
+        node.units = units || "Standard (Kelvin)";
         callback();
     }
 
@@ -46,24 +47,34 @@ module.exports = function(RED) {
         msg.payload = {};
         msg.location = {};
 
+        // Determine units parameter - &units=standard/metric/imperial
+        var unitparam;
+        if (node.units === "Metric (Celsius)") {
+            unitparam = "&units=metric";
+        } else if (node.units === "Imperial (Fahrenheit)") {
+            unitparam = "&units=imperial";
+        } else {
+            unitparam = "&units=standard";
+        }
+
         var url;
         if (node.hasOwnProperty("credentials") && node.credentials.hasOwnProperty("apikey")) {
             //If there is a value missing, the URL is not initialised.
             if (node.wtype === "forecast") {
                 if (node.lat && node.lon) {
-                    url = "http://api.openweathermap.org/data/2.5/forecast?lang=" + node.language + "&cnt=40&units=metric&lat=" + node.lat + "&lon=" + node.lon + "&APPID=" + node.credentials.apikey;
+                    url = "http://api.openweathermap.org/data/2.5/forecast?lang=" + node.language + "&cnt=40&units=metric&lat=" + node.lat + "&lon=" + node.lon + unitparam + "&APPID=" + node.credentials.apikey;
                 } else if (node.city && node.country) {
-                    url = "http://api.openweathermap.org/data/2.5/forecast?lang=" + node.language + "&cnt=40&units=metric&q=" + node.city + "," + node.country + "&APPID=" + node.credentials.apikey;
+                    url = "http://api.openweathermap.org/data/2.5/forecast?lang=" + node.language + "&cnt=40&units=metric&q=" + node.city + "," + node.country + unitparam + "&APPID=" + node.credentials.apikey;
                 }
             } else if (node.wtype === "current") {
                 if (node.lat && node.lon) {
-                    url = "http://api.openweathermap.org/data/2.5/weather?lang=" + node.language + "&lat=" + node.lat + "&lon=" + node.lon + "&APPID=" + node.credentials.apikey;
+                    url = "http://api.openweathermap.org/data/2.5/weather?lang=" + node.language + "&lat=" + node.lat + "&lon=" + node.lon + unitparam + "&APPID=" + node.credentials.apikey;
                 } else if (node.city && node.country) {
-                    url = "http://api.openweathermap.org/data/2.5/weather?lang=" + node.language + "&q=" + node.city + "," + node.country + "&APPID=" + node.credentials.apikey;
+                    url = "http://api.openweathermap.org/data/2.5/weather?lang=" + node.language + "&q=" + node.city + "," + node.country + unitparam + "&APPID=" + node.credentials.apikey;
                 }
             } else if (node.wtype === "onecall") {
                 if (node.lat && node.lon) {
-                    url = "https://api.openweathermap.org/data/2.5/onecall?lang=" + node.language + "&lat=" + node.lat + "&lon=" + node.lon + "&units=metric&APPID=" + node.credentials.apikey;
+                    url = "https://api.openweathermap.org/data/2.5/onecall?lang=" + node.language + "&lat=" + node.lat + "&lon=" + node.lon + unitparam + "&units=metric&APPID=" + node.credentials.apikey;
                 }
             }
 
@@ -175,6 +186,7 @@ module.exports = function(RED) {
         var language;
         var lat;
         var lon;
+        var units;
         if ((!node.credentials) || (!node.credentials.hasOwnProperty("apikey"))) { node.error(RED._("weather.error.no-api-key")); }
 
         this.interval_id = setInterval( function() {
@@ -193,7 +205,8 @@ module.exports = function(RED) {
             if (language === "msg") {
                 language = msg.language || "en";
             }
-            assignmentFunction(node, msg, lat, lon, city, country, language, function() {
+            units = n.units || "Standard (Kelvin)";
+            assignmentFunction(node, msg, lat, lon, city, country, language, units, function() {
                 weatherPoll(node, msg, function(err) {
                     if (err) {
                         node.error(err,msg);
@@ -226,6 +239,7 @@ module.exports = function(RED) {
         var language;
         var lat;
         var lon;
+        var units;
         if ((!node.credentials) || (!node.credentials.hasOwnProperty("apikey"))) { node.error(RED._("weather.error.no-api-key")); }
 
         this.on('input', function(msg) {
@@ -248,7 +262,8 @@ module.exports = function(RED) {
             if (language === "msg") {
                 language = msg.language || "en";
             }
-            assignmentFunction(node, msg, lat, lon, city, country, language, function() {
+            units = n.units || "Standard (Kelvin)"
+            assignmentFunction(node, msg, lat, lon, city, country, language, units, function() {
                 weatherPoll(node, msg, function(err) {
                     if (err) {
                         node.error(err,msg);
