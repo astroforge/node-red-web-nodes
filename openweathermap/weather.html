@@ -86,11 +86,11 @@
         <label for=""><i class="weather-location-type"></i> <span data-i18n="weather.label.longitude"></span></label><input type="text" class="weather-location-input" id="node-input-lon" style="width: 180px; margin-bottom:7px" data-i18n="[placeholder]weather.placeholder.longitude">
     </div>
     <div class="form-row">
-        <label><span> </span></label>
-        <select id="node-input-unit-type" style="width:300px">
-            <option value="Standard (Kelvin)" data-i18n="weather.label.option_units_standard"></option>
-            <option value="Metric (Celsius)" data-i18n="weather.label.option_units_metric"></option>
-            <option value="Imperial (Fahrenheit)" data-i18n="weather.label.option_imperial"></option>
+        <label for="node-input-name"><i class="icon-tag"></i> <span data-i18n="weather.label.units"></span></label>
+        <select id="node-input-units" style="width:300px">
+            <option value="standard" data-i18n="weather.label.option_units_standard"></option>
+            <option value="metric" data-i18n="weather.label.option_units_metric"></option>
+            <option value="imperial" data-i18n="weather.label.option_units_imperial"></option>
         </select>
     </div>
     <div class="form-row">
@@ -117,7 +117,7 @@
             city: {value:""},
             country: {value:""},
             language: {value:"en"},
-            units: {value:"Standard (Kelvin)"}
+            units: {value:"standard"}
         },
         credentials: {
             apikey: {type:"password", required:true}
@@ -242,11 +242,11 @@
         <label for=""><i class="weather-location-type"></i> <span data-i18n="weather.label.longitude"></span></label><input type="text" class="weather-location-input" id="node-input-lon" style="width: 180px; margin-bottom:7px" data-i18n="[placeholder]weather.placeholder.longitude">
     </div>
     <div class="form-row">
-        <label><span> </span></label>
-        <select id="node-input-unit-type" style="width:300px">
-            <option value="Standard (Kelvin)" data-i18n="weather.label.option_units_standard"></option>
-            <option value="Metric (Celsius)" data-i18n="weather.label.option_units_metric"></option>
-            <option value="Imperial (Fahrenheit)" data-i18n="weather.label.option_imperial"></option>
+        <label for="node-input-name"><i class="icon-tag"></i> <span data-i18n="weather.label.units"></span></label>
+        <select id="node-input-units" style="width:300px">
+            <option value="standard" data-i18n="weather.label.option_units_standard"></option>
+            <option value="metric" data-i18n="weather.label.option_units_metric"></option>
+            <option value="imperial" data-i18n="weather.label.option_units_imperial"></option>
         </select>
     </div>
     <div class="form-row">
@@ -267,7 +267,7 @@
             city: {value:""},
             country: {value:""},
             language: {value:"en"},
-            units: {value:"Standard (Kelvin)"}
+            units: {value:"standard"}
         },
         credentials: {
             apikey: {type:"password", required:true}

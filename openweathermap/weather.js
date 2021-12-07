@@ -38,7 +38,7 @@ module.exports = function(RED) {
             }
         }
         node.language = language || "en";
-        node.units = units || "Standard (Kelvin)";
+        node.units = units || "standard";
         callback();
     }
 
@@ -48,13 +48,19 @@ module.exports = function(RED) {
         msg.location = {};
 
         // Determine units parameter - &units=standard/metric/imperial
-        var unitparam;
-        if (node.units === "Metric (Celsius)") {
+        var unitparam, temp_units, speed_units;
+        if (node.units === "metric") {
             unitparam = "&units=metric";
-        } else if (node.units === "Imperial (Fahrenheit)") {
+            temp_units = "C";
+            speed_units = "m/s";
+        } else if (node.units === "imperial") {
             unitparam = "&units=imperial";
+            temp_units = "F";
+            speed_units = "mph";
         } else {
             unitparam = "&units=standard";
+            temp_units = "K";
+            speed_units = "m/s";
         }
 
         var url;
@@ -62,9 +68,9 @@ module.exports = function(RED) {
             //If there is a value missing, the URL is not initialised.
             if (node.wtype === "forecast") {
                 if (node.lat && node.lon) {
-                    url = "http://api.openweathermap.org/data/2.5/forecast?lang=" + node.language + "&cnt=40&units=metric&lat=" + node.lat + "&lon=" + node.lon + unitparam + "&APPID=" + node.credentials.apikey;
+                    url = "http://api.openweathermap.org/data/2.5/forecast?lang=" + node.language + "&cnt=40" + unitparam + "&lat=" + node.lat + "&lon=" + node.lon + "&APPID=" + node.credentials.apikey;
                 } else if (node.city && node.country) {
-                    url = "http://api.openweathermap.org/data/2.5/forecast?lang=" + node.language + "&cnt=40&units=metric&q=" + node.city + "," + node.country + unitparam + "&APPID=" + node.credentials.apikey;
+                    url = "http://api.openweathermap.org/data/2.5/forecast?lang=" + node.language + "&cnt=40" + unitparam + "&q=" + node.city + "," + node.country + "&APPID=" + node.credentials.apikey;
                 }
             } else if (node.wtype === "current") {
                 if (node.lat && node.lon) {
@@ -74,7 +80,7 @@ module.exports = function(RED) {
                 }
             } else if (node.wtype === "onecall") {
                 if (node.lat && node.lon) {
-                    url = "https://api.openweathermap.org/data/2.5/onecall?lang=" + node.language + "&lat=" + node.lat + "&lon=" + node.lon + unitparam + "&units=metric&APPID=" + node.credentials.apikey;
+                    url = "https://api.openweathermap.org/data/2.5/onecall?lang=" + node.language + "&lat=" + node.lat + "&lon=" + node.lon + unitparam + "&APPID=" + node.credentials.apikey;
                 }
             }
 
@@ -106,10 +112,11 @@ module.exports = function(RED) {
                             msg.payload.weather = jsun.weather[0].main;
                             msg.payload.detail = jsun.weather[0].description;
                             msg.payload.icon = jsun.weather[0].icon;
-                            msg.payload.tempk = jsun.main.temp;
-                            if (jsun.main.hasOwnProperty("temp")) { msg.payload.tempc = parseInt(10 * (Number(jsun.main.temp) - 273.15))/10; }
-                            if (jsun.main.hasOwnProperty("temp_max")) { msg.payload.temp_maxc = parseInt(10 * (Number(jsun.main.temp_max) - 273.15))/10; }
-                            if (jsun.main.hasOwnProperty("temp_min")) { msg.payload.temp_minc = parseInt(10 * (Number(jsun.main.temp_min) - 273.15))/10; }
+                            msg.payload.temp = jsun.main.temp;
+                            //msg.payload.tempk = jsun.main.temp;
+                            //if (jsun.main.hasOwnProperty("temp")) { msg.payload.tempc = parseInt(10 * (Number(jsun.main.temp) - 273.15))/10; }
+                            //if (jsun.main.hasOwnProperty("temp_max")) { msg.payload.temp_maxc = parseInt(10 * (Number(jsun.main.temp_max) - 273.15))/10; }
+                            //if (jsun.main.hasOwnProperty("temp_min")) { msg.payload.temp_minc = parseInt(10 * (Number(jsun.main.temp_min) - 273.15))/10; }
                             msg.payload.humidity = jsun.main.humidity;
                             msg.payload.pressure = jsun.main.pressure;
                             msg.payload.maxtemp = jsun.main.temp_max;
@@ -128,6 +135,8 @@ module.exports = function(RED) {
                             msg.location.city = jsun.name;
                             msg.location.country = jsun.sys.country;
                             if (jsun.hasOwnProperty("dt")) { msg.time = new Date(jsun.dt*1000); }
+                            msg.payload.temp_units = temp_units;
+                            msg.payload.speed_units = speed_units;
                             msg.title = RED._("weather.message.title");
                             msg.description = RED._("weather.message.description", {lat: msg.location.lat, lon: msg.location.lon});
                             msg.payload.description = (RED._("weather.message.payload", {name: jsun.name, lat: jsun.coord.lat, lon: jsun.coord.lon, main: jsun.weather[0].main, description: jsun.weather[0].description}));
@@ -142,6 +151,7 @@ module.exports = function(RED) {
                                     msg.location.lon = jsun.city.coord.lon;
                                 }
                             }
+                            msg.units = {temp_units: (temp_units), speed_units: (speed_units)};
                             msg.title = RED._("weather.message.forecast");
                             callback();
                         } else if(jsun.hasOwnProperty("current") && jsun.hasOwnProperty("hourly") && jsun.hasOwnProperty("daily")) {
@@ -153,6 +163,8 @@ module.exports = function(RED) {
                             }
                             msg.location.lat = jsun.lat;
                             msg.location.lon = jsun.lon;
+                            msg.payload.temp_units = temp_units;
+                            msg.payload.speed_units = speed_units;
                             callback();
                         } else {
                             if (jsun.message === "Error: Not found city") {
@@ -205,7 +217,7 @@ module.exports = function(RED) {
             if (language === "msg") {
                 language = msg.language || "en";
             }
-            units = n.units || "Standard (Kelvin)";
+            units = n.units || "standard";
             assignmentFunction(node, msg, lat, lon, city, country, language, units, function() {
                 weatherPoll(node, msg, function(err) {
                     if (err) {
@@ -262,7 +274,7 @@ module.exports = function(RED) {
             if (language === "msg") {
                 language = msg.language || "en";
             }
-            units = n.units || "Standard (Kelvin)"
+            units = n.units || "standard"
             assignmentFunction(node, msg, lat, lon, city, country, language, units, function() {
                 weatherPoll(node, msg, function(err) {
                     if (err) {
